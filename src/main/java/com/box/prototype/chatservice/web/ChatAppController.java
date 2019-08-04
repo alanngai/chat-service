@@ -6,8 +6,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-public class ChatRoomController {
-    @Value("Chat Service")
+public class ChatAppController {
+    @Value("Chat Service App")
     private String appName;
 
     @RequestMapping("/chatapp")
