@@ -19,9 +19,9 @@ public class RestRouter {
                 .and(RequestPredicates.accept(MediaType.APPLICATION_JSON)), handler::listChatRooms);
     }
 
-    @Bean
-    RouterFunction<ServerResponse> chatSessionRoutes(ChatSessionHandler handler) {
-        return RouterFunctions
-            .route(RequestPredicates.POST("/api/chatsessions"), handler::startChatSession);
-    }
+//    @Bean
+//    RouterFunction<ServerResponse> chatSessionRoutes(ChatSessionHandler handler) {
+//        return RouterFunctions
+//            .route(RequestPredicates.POST("/api/chatsessions"), handler::startChatSession);
+//    }
 }

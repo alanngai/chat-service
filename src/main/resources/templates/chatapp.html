@@ -1,7 +1,26 @@
 <html xmlns:th="http://www.w3.org/1999/xhtml" lang="en">
-<head><title>Chat Room</title></head>
+<head><title>Chat Room</title>
+	<link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/semantic.min.css" />
+	<script type="text/javascript" src="js/chatapp.js"></script>
+</head>
 <body>
-	<h1>Hello !</h1>
-	<p>Welcome to <span th:text="${appName}">Our App</span></p>
+	<div>
+		<div id="connect-container" class="ui centered grid">
+			<div class="row">
+				<button id="connect" onclick="connect();" class="ui green button">Connect</button>
+				<button id="disconnect" disabled="disabled" onclick="disconnect();" class="ui red button">Disconnect</button>
+			</div>
+			<div class="row">
+				<textarea id="message" style="width: 350px" class="ui input" placeholder="Message to Echo"></textarea>
+			</div>
+			<div class="row">
+				<button id="chatsession" onclick="echo();" disabled="disabled" class="ui button">Echo message</button>
+			</div>
+		</div>
+		<div id="console-container">
+			<h3>Logging</h3>
+			<div id="logging"></div>
+		</div>
+	</div>
 </body>
 </html>
