@@ -1,4 +1,4 @@
-package com.box.prototype.chatservice.persistence.model;
+package com.box.prototype.chatservice.domain.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -7,12 +7,13 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "chatrooms")
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ChatRoom {
+public class ChatRoom implements Serializable {
     @Id
     @Size(max = 50)
     private String id;
