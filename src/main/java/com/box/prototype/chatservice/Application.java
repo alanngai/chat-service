@@ -7,6 +7,7 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.web.reactive.HandlerMapping;
+import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.server.WebSocketService;
@@ -24,29 +25,29 @@ public class Application {
         SpringApplication.run(Application.class, args);
     }
 
-    @Bean
-    public ChatSessionHandler chatSessionHandler() {
-        return new ChatSessionHandler();
-    }
-
-    @Bean
-    public HandlerMapping handlerMapping() {
-        Map<String, WebSocketHandler> map = new HashMap<>();
-        map.put("/chatapp/chatsessions", chatSessionHandler());
-
-        SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
-        mapping.setUrlMap(map);
-        mapping.setOrder(Ordered.HIGHEST_PRECEDENCE);
-        return mapping;
-    }
-
-    @Bean
-    public WebSocketHandlerAdapter handlerAdapter() {
-        return new WebSocketHandlerAdapter(webSocketService());
-    }
-
-    @Bean
-    public WebSocketService webSocketService() {
-        return new HandshakeWebSocketService(new ReactorNettyRequestUpgradeStrategy());
-    }
+//    @Bean
+//    public ChatSessionHandler chatSessionHandler() {
+//        return new ChatSessionHandler();
+//    }
+//
+//    @Bean
+//    public HandlerMapping handlerMapping() {
+//        Map<String, WebSocketHandler> map = new HashMap<>();
+//        map.put("/chatapp/chatsessions", chatSessionHandler());
+//
+//        SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
+//        mapping.setUrlMap(map);
+//        mapping.setOrder(Ordered.HIGHEST_PRECEDENCE);
+//        return mapping;
+//    }
+//
+//    @Bean
+//    public WebSocketHandlerAdapter handlerAdapter() {
+//        return new WebSocketHandlerAdapter(webSocketService());
+//    }
+//
+//    @Bean
+//    public WebSocketService webSocketService() {
+//        return new HandshakeWebSocketService(new ReactorNettyRequestUpgradeStrategy());
+//    }
 }

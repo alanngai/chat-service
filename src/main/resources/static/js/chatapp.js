@@ -35,7 +35,7 @@ function disconnect() {
 function echo() {
     if (ws != null) {
         var message = document.getElementById('message').value;
-        log('Set to server :: ' + message);
+        log('Sent to server :: ' + message);
         ws.send(message);
     } else {
         alert('connection not established, please connect.');

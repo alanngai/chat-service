@@ -1,7 +1,6 @@
 package com.box.prototype.chatservice.rest;
 
 import com.box.prototype.chatservice.rest.handler.ChatRoomHandler;
-import com.box.prototype.chatservice.rest.handler.ChatSessionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -18,10 +17,4 @@ public class RestRouter {
             .route(RequestPredicates.GET("/api/chatrooms")
                 .and(RequestPredicates.accept(MediaType.APPLICATION_JSON)), handler::listChatRooms);
     }
-
-//    @Bean
-//    RouterFunction<ServerResponse> chatSessionRoutes(ChatSessionHandler handler) {
-//        return RouterFunctions
-//            .route(RequestPredicates.POST("/api/chatsessions"), handler::startChatSession);
-//    }
 }
