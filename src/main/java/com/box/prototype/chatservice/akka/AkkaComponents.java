@@ -16,6 +16,8 @@ public class AkkaComponents {
         this.config = ConfigFactory.load();
         this.system = ActorSystem.create("chat-service", this.config);
         this.materializer = ActorMaterializer.create(this.system);
+
+        // TODO: create chat room shard region
     }
 
     public Config getConfig() {
