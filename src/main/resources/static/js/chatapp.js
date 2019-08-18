@@ -1,5 +1,5 @@
 var ws = null;
-var url = "ws://localhost:9091/chatapp/chatsessions";
+var urlRoot = "ws://localhost:9091/chatapp";
 
 function setConnected(connected) {
     document.getElementById('connect').disabled = connected;
@@ -8,20 +8,25 @@ function setConnected(connected) {
 }
 
 function connect() {
-    ws = new WebSocket(url);
-    ws.onopen = function() {
-        setConnected(true);
-        log('Info: connection established');
-    }
+    var chatRoom = document.getElementById('chatroom').value.replace(/[\s\/\\]/g, '-');
+    if (chatRoom === "") {
+        alert('chatroom cannot be empty or contain spaces or slashes');
+    } else {
+        ws = new WebSocket(urlRoot + "/chatrooms/" + chatRoom + "/chatsessions");
+        ws.onopen = function() {
+            setConnected(true);
+            log('Info: connection established');
+        }
 
-    ws.onmessage = function(event) {
-        log(event.data);
-    }
+        ws.onmessage = function(event) {
+            log(event.data);
+        }
 
-    ws.onclose = function(event) {
-        setConnected(false);
-        log('Info: closing connection');
-    };
+        ws.onclose = function(event) {
+            setConnected(false);
+            log('Info: closing connection');
+        };
+    }
 }
 
 function disconnect() {

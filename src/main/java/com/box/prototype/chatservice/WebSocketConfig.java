@@ -19,6 +19,9 @@ import java.util.Map;
 
 @Component
 public class WebSocketConfig {
+    public static final String ID_PARAM_KEY = "id";
+    public static final String CHAT_SESSION_ROUTE = String.format("/chatapp/chatrooms/{%s}/chatsessions", ID_PARAM_KEY);
+
     @Autowired
     private AkkaComponents akkaComponents;
 
@@ -30,7 +33,7 @@ public class WebSocketConfig {
     @Bean
     public HandlerMapping handlerMapping() {
         Map<String, WebSocketHandler> map = new HashMap<>();
-        map.put("/chatapp/chatsessions", chatSessionHandler());
+        map.put(CHAT_SESSION_ROUTE, chatSessionHandler());
 
         SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
         mapping.setUrlMap(map);
