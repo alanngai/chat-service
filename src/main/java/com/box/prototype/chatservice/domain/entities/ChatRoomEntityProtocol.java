@@ -1,6 +1,7 @@
 package com.box.prototype.chatservice.domain.entities;
 
 import akka.actor.ActorRef;
+import akka.stream.SinkRef;
 import com.box.prototype.chatservice.domain.models.ChatMessage;
 
 import java.io.Serializable;
@@ -12,13 +13,15 @@ public class ChatRoomEntityProtocol {
     public interface ChatRoomCommand {}
     public static class JoinChat implements Serializable, ChatRoomCommand {
         public final long timestamp;
+        public final String sessionId;
         public final String userId;
-        public final ActorRef chatSession;
+        public SinkRef<ChatMessage> sessionListener;
 
-        public JoinChat(long timestamp, String userId, ActorRef chatSession) {
+        public JoinChat(long timestamp, String userId, String sessionId, SinkRef<ChatMessage> sessionListener) {
             this.timestamp = timestamp;
+            this.sessionId = sessionId;
             this.userId = userId;
-            this.chatSession = chatSession;
+            this.sessionListener = sessionListener;
         }
     }
     public static class RejoinChat implements Serializable, ChatRoomCommand {
@@ -35,10 +38,12 @@ public class ChatRoomEntityProtocol {
     public static class LeaveChat implements Serializable, ChatRoomCommand {
         public final long timestamp;
         public final String userId;
+        public final String sessionId;
 
-        public LeaveChat(long timestamp, String userId) {
+        public LeaveChat(long timestamp, String userId, String sessionId) {
             this.timestamp = timestamp;
             this.userId = userId;
+            this.sessionId = sessionId;
         }
     }
     public static class AddMessage implements Serializable, ChatRoomCommand {

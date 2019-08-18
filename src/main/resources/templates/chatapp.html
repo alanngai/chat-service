@@ -7,6 +7,12 @@
 	<div>
 		<div id="connect-container" class="ui centered grid">
 			<div class="row">
+				<span>Name</span>
+				<span>
+					<input type="text" id="name" style="width: 100px" class="ui input" placeholder="Name"></input>
+				</span>
+			</div>
+			<div class="row">
 				<span>Chat Room</span>
 				<span>
 					<input type="text" id="chatroom" style="width: 100px" class="ui input" placeholder="Chat Room" value="mychat"></input>
@@ -20,7 +26,7 @@
 				<textarea id="message" style="width: 350px" class="ui input" placeholder="Message to Echo"></textarea>
 			</div>
 			<div class="row">
-				<button id="chatsession" onclick="echo();" disabled="disabled" class="ui button">Echo message</button>
+				<button id="chatsession" onclick="sendMessage();" disabled="disabled" class="ui button">Send</button>
 			</div>
 		</div>
 		<div id="console-container">
