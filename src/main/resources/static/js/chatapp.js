@@ -1,9 +1,10 @@
 var ws = null;
 var urlRoot = "ws://localhost:9091/chatapp";
 
-function chatMessage(name, message) {
+function chatMessage(name, room, message) {
     return {
         'userId': name,
+        'room': room,
         'message': message,
         'timestamp': (new Date()).getTime()
     };

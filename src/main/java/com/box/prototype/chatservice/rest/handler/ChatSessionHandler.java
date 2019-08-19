@@ -1,6 +1,6 @@
 package com.box.prototype.chatservice.rest.handler;
 
-import akka.actor.AbstractActorWithTimers;
+import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.event.Logging;
@@ -26,6 +26,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
@@ -52,12 +53,14 @@ public class ChatSessionHandler implements WebSocketHandler {
 
     private ConcurrentHashMap<String, ActorRef> sessions = new ConcurrentHashMap<>();
 
+    // TODO: convert this to a local session actor that will buffer communication to chat room
+    // TODO: - have to keep track of last message index
+    // TODO: - rejoin will need to provide index to retrieve messages since
+    // TODO: - use userId-timestamp for id for idempotency
     // TODO: remove this fake chat room and use real on instead
-    private static class FakeChatRoom extends AbstractActorWithTimers {
+    private static class FakeChatRoom extends AbstractActor {
         private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
 
-        private static final Object TICK_KEY = "tick-key";
-        private static final class Tick {}
         private static final class KillSession {}
 
         private ActorMaterializer materializer;
@@ -66,6 +69,12 @@ public class ChatSessionHandler implements WebSocketHandler {
         /** constructor */
         public FakeChatRoom() {
             this.materializer = ActorMaterializer.create(getContext());
+        }
+
+        /** cleanup */
+        @Override
+        public void postStop() {
+            new ArrayList<>(this.sessions.keySet()).stream().forEach(this::removeSession);
         }
 
         /** message handler */
@@ -82,12 +91,8 @@ public class ChatSessionHandler implements WebSocketHandler {
                     })
                     .match(ChatRoomEntityProtocol.LeaveChat.class, msg -> {
                         log.info("terminating chat session: {}", msg.sessionId);
-                        if (this.sessions.containsKey(msg.sessionId)) {
-                            SourceQueueWithComplete<ChatMessage> queue = this.sessions.get(msg.sessionId);
-                            queue.complete();
-                            this.sessions.remove(msg.sessionId);
-                            publishToSessions(new ChatMessage(msg.timestamp, "chatroomadmin", String.format("[%s] has left chatroom", msg.userId)));
-                        }
+                        removeSession(msg.sessionId);
+                        publishToSessions(new ChatMessage(msg.timestamp, "chatroomadmin", String.format("[%s] has left chatroom", msg.userId)));
                     })
                     .match(ChatMessage.class, msg -> {
                         log.info("fake chat room received: " + msg);
@@ -96,6 +101,15 @@ public class ChatSessionHandler implements WebSocketHandler {
                     .match(KillSession.class, msg -> getContext().stop(getSelf()))
                     .matchAny(msg -> log.info("received unknown message: ", msg))
                     .build();
+        }
+
+        /** remove session */
+        protected void removeSession(String sessionId) {
+            if (this.sessions.containsKey(sessionId)) {
+                SourceQueueWithComplete<ChatMessage> queue = this.sessions.get(sessionId);
+                queue.complete();
+                this.sessions.remove(sessionId);
+            }
         }
 
         /** publish message to listeners */
@@ -142,8 +156,9 @@ public class ChatSessionHandler implements WebSocketHandler {
                 );
             });
 
+            // handle incoming messages
             session.receive()
-                // handle incoming messages
+                // deserialize incoming payload
                 .flatMap(inMsg -> {
                     String payload = "";
                     try {
