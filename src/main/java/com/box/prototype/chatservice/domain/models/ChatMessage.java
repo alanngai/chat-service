@@ -11,14 +11,12 @@ import java.io.Serializable;
 public class ChatMessage implements Serializable {
     private long timestamp;
     private String userId;
-    private String chatRoom;
     private String message;
 
     public ChatMessage() {}
-    public ChatMessage(long timestamp, String userId, String chatRoom, String message) {
+    public ChatMessage(long timestamp, String userId, String message) {
         this.timestamp = timestamp;
         this.userId = userId;
-        this.chatRoom = chatRoom;
         this.message = message;
     }
 
@@ -46,20 +44,11 @@ public class ChatMessage implements Serializable {
         this.message = message;
     }
 
-    public String getChatRoom() {
-        return chatRoom;
-    }
-
-    public void setChatRoom(String chatRoom) {
-        this.chatRoom = chatRoom;
-    }
-
     @Override
     public String toString() {
         return "ChatMessage{" +
             "timestamp=" + timestamp +
             ", userId='" + userId + '\'' +
-            ", chatRoom='" + chatRoom+ '\'' +
             ", message='" + message + '\'' +
             '}';
     }

@@ -1,10 +1,9 @@
 package com.box.prototype.chatservice.domain.entities;
 
-import akka.actor.ActorRef;
 import akka.cluster.sharding.ShardRegion;
 import akka.stream.SinkRef;
 import com.box.prototype.chatservice.domain.models.ChatMessage;
-import com.box.prototype.chatservice.domain.models.ChatRoom;
+import com.box.prototype.chatservice.domain.models.SessionInfo;
 import com.typesafe.config.Config;
 
 import java.io.Serializable;
@@ -13,60 +12,52 @@ import java.util.HashSet;
 
 public class ChatRoomEntityProtocol {
     // commands
-    public interface ChatRoomCommand {
-        String getChatRoom();
+    public static class ChatRoomCommand {
+        public final SessionInfo sessionInfo;
+
+        protected ChatRoomCommand(SessionInfo sessionInfo) {
+            this.sessionInfo = sessionInfo;
+        }
     }
-    public static class JoinChat implements Serializable, ChatRoomCommand {
+    public static class JoinChat extends ChatRoomCommand implements Serializable{
         public final long timestamp;
-        public final String chatRoom;
-        public final String userId;
         public SinkRef<ChatMessage> sessionListener;
 
-        public JoinChat(long timestamp, String userId, String chatRoom, SinkRef<ChatMessage> sessionListener) {
+        public JoinChat(long timestamp, SessionInfo sessionInfo, SinkRef<ChatMessage> sessionListener) {
+            super(sessionInfo);
             this.timestamp = timestamp;
-            this.chatRoom = chatRoom;
-            this.userId = userId;
             this.sessionListener = sessionListener;
         }
-        public String getChatRoom() { return this.chatRoom; }
+        public String getChatRoom() { return this.sessionInfo.getChatRoom(); }
     }
-    public static class RejoinChat implements Serializable, ChatRoomCommand {
+    public static class RejoinChat extends  ChatRoomCommand implements Serializable {
         public final long timestamp;
-        public final String chatRoom;
-        public final String userId;
-        public final String lastEventId;
         public SinkRef<ChatMessage> sessionListener;
 
-        public RejoinChat(long timestamp, String userId, String chatRoom, String lastEventId, SinkRef<ChatMessage> sessionListener) {
+        public RejoinChat(long timestamp, SessionInfo sessionInfo, SinkRef<ChatMessage> sessionListener) {
+            super(sessionInfo);
             this.timestamp = timestamp;
-            this.chatRoom = chatRoom;
-            this.userId = userId;
-            this.lastEventId = lastEventId;
             this.sessionListener = sessionListener;
         }
-        public String getChatRoom() { return this.chatRoom; }
+        public String getChatRoom() { return this.sessionInfo.getChatRoom(); }
     }
-    public static class LeaveChat implements Serializable, ChatRoomCommand {
+    public static class LeaveChat extends ChatRoomCommand implements Serializable{
         public final long timestamp;
-        public final String userId;
-        public final String chatRoom;
 
-        public LeaveChat(long timestamp, String userId, String chatRoom) {
+        public LeaveChat(long timestamp, SessionInfo sessionInfo) {
+            super(sessionInfo);
             this.timestamp = timestamp;
-            this.userId = userId;
-            this.chatRoom = chatRoom;
         }
-        public String getChatRoom() { return this.chatRoom; }
+        public String getChatRoom() { return this.sessionInfo.getChatRoom(); }
     }
-    public static class AddMessage implements Serializable, ChatRoomCommand {
+    public static class AddMessage extends ChatRoomCommand implements Serializable {
         public final ChatMessage message;
-        public final String lastEventId;
 
-        public AddMessage(ChatMessage message, String lastEventId) {
+        public AddMessage(ChatMessage message, SessionInfo sessionInfo) {
+            super(sessionInfo);
             this.message = message;
-            this.lastEventId = lastEventId;
         }
-        public String getChatRoom() { return this.message.getChatRoom(); }
+        public String getChatRoom() { return this.sessionInfo.getChatRoom(); }
     }
 
     // command responses
@@ -125,11 +116,11 @@ public class ChatRoomEntityProtocol {
             if (event instanceof MemberJoined) {
                 MemberJoined joined = (MemberJoined)event;
                 this.members.add(joined.userId);
-                this.chatLog.add(new ChatMessage(joined.timestamp, joined.userId, this.chatRoom, String.format("[%s] joined chat", joined.userId)));
+                this.chatLog.add(new ChatMessage(joined.timestamp, joined.userId, String.format("[%s] joined chat", joined.userId)));
             } else if (event instanceof MemberLeft) {
                 MemberLeft left = (MemberLeft) event;
                 this.members.remove(left.userId);
-                this.chatLog.add(new ChatMessage(left.timestamp, left.userId, chatRoom, String.format("[%s] left chat", left.userId)));
+                this.chatLog.add(new ChatMessage(left.timestamp, left.userId, String.format("[%s] left chat", left.userId)));
             } else if (event instanceof MessageAdded) {
                 this.chatLog.add(((MessageAdded)event).message);
             } else {
@@ -154,7 +145,7 @@ public class ChatRoomEntityProtocol {
         @Override
         public String entityId(Object message) {
             if (message instanceof ChatRoomCommand) {
-                return ((ChatRoomCommand)message).getChatRoom();
+                return ((ChatRoomCommand)message).sessionInfo.getChatRoom();
             } else {
                 throw new RuntimeException("unknown message: " + message);
             }
