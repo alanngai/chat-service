@@ -34,12 +34,14 @@ public class ChatRoomEntityProtocol {
         public final long timestamp;
         public final String chatRoom;
         public final String userId;
+        public final String lastEventId;
         public SinkRef<ChatMessage> sessionListener;
 
-        public RejoinChat(long timestamp, String userId, String chatRoom, SinkRef<ChatMessage> sessionListener) {
+        public RejoinChat(long timestamp, String userId, String chatRoom, String lastEventId, SinkRef<ChatMessage> sessionListener) {
             this.timestamp = timestamp;
             this.chatRoom = chatRoom;
             this.userId = userId;
+            this.lastEventId = lastEventId;
             this.sessionListener = sessionListener;
         }
         public String getChatRoom() { return this.chatRoom; }
@@ -68,6 +70,7 @@ public class ChatRoomEntityProtocol {
     }
 
     // command responses
+    public static class Committed implements Serializable {}
     public static class NewChatMessage implements Serializable {
         public final ChatMessage chatMessage;
         public final String lastEventId;

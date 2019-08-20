@@ -43,19 +43,7 @@ public class ChatRoomEntity extends AbstractPersistentActor {
             .match(JoinChat.class, cmd -> persistAndHandle(cmd, new MemberJoined(cmd.timestamp, cmd.userId), this::handleMemberJoined))
             .match(LeaveChat.class, cmd -> persistAndHandle(cmd, new MemberLeft(cmd.timestamp, cmd.userId), this::handleMemberLeft))
             .match(AddMessage.class, cmd -> persistAndHandle(cmd, new MessageAdded(cmd.message), this::handleMessageAdded))
-            .match(GetMessageLog.class, this::handleGetMessageLog)
             .build();
-    }
-
-    protected void handleGetMessageLog(GetMessageLog cmd) {
-        ArrayList<ChatMessage> log = new ArrayList<>(cmd.numMessages);
-        int lastIndex = cmd.lastIndex >= 0 ? cmd.lastIndex : this.state.chatLog.size() - 1;
-        int i = lastIndex;
-        for (; (i >= 0) || (lastIndex - i < cmd.numMessages); --i) {
-            log.add(this.state.chatLog.get(i));
-        }
-        Collections.reverse(log);
-        getSender().tell(new MessageLog(log, i), getSelf());
     }
 
     protected void handleMemberJoined(JoinChat command, MemberJoined event) {

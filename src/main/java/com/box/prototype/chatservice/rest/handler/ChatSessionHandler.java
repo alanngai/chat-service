@@ -1,15 +1,10 @@
 package com.box.prototype.chatservice.rest.handler;
 
-import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.event.Logging;
-import akka.event.LoggingAdapter;
 import akka.japi.Pair;
 import akka.stream.*;
 import akka.stream.javadsl.*;
 import com.box.prototype.chatservice.akka.AkkaComponents;
-import com.box.prototype.chatservice.domain.ChatSession;
 import com.box.prototype.chatservice.domain.entities.ChatRoomEntityProtocol;
 import com.box.prototype.chatservice.domain.models.ChatMessage;
 import com.box.prototype.chatservice.util.URIParser;
@@ -30,30 +25,27 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.time.Duration;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static akka.pattern.Patterns.*;
 import static com.box.prototype.chatservice.WebSocketConfig.*;
 
 @EnableWebFlux
 public class ChatSessionHandler implements WebSocketHandler {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    private final Duration REQUEST_TIMEOUT;
+
     private AkkaComponents akkaComponents;
     private final ObjectMapper mapper = new ObjectMapper();
-
-    // TODO: remove this
-    private ActorRef fakeChatRoom;
 
     public ChatSessionHandler(AkkaComponents components) {
         this.akkaComponents = components;
 
-        // TODO: remove this
-        this.fakeChatRoom = this.akkaComponents.getSystem().actorOf(Props.create(FakeChatRoom.class));
+        REQUEST_TIMEOUT = components.getConfig().getDuration("server.request-timeout");
     }
 
     private ConcurrentHashMap<String, ActorRef> sessions = new ConcurrentHashMap<>();
@@ -63,66 +55,66 @@ public class ChatSessionHandler implements WebSocketHandler {
     // TODO: - rejoin will need to provide index to retrieve messages since
     // TODO: - use userId-timestamp for id for idempotency
     // TODO: remove this fake chat room and use real on instead
-    private static class FakeChatRoom extends AbstractActor {
-        private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
-
-        private static final class KillSession {}
-
-        private ActorMaterializer materializer;
-        private HashMap<String, SourceQueueWithComplete<ChatMessage>> sessions = new HashMap<>();
-
-        /** constructor */
-        public FakeChatRoom() {
-            this.materializer = ActorMaterializer.create(getContext());
-        }
-
-        /** cleanup */
-        @Override
-        public void postStop() {
-            new ArrayList<>(this.sessions.keySet()).stream().forEach(this::removeSession);
-        }
-
-        /** message handler */
-        @Override
-        public Receive createReceive() {
-            return receiveBuilder()
-                    .match(ChatRoomEntityProtocol.JoinChat.class, msg -> {
-                        log.info("creating source queue for session({})", msg.sessionId);
-                        SourceQueueWithComplete<ChatMessage> sourceQueue = Source.<ChatMessage>queue(100, OverflowStrategy.backpressure())
-                            .to(msg.sessionListener.getSink())
-                            .run(this.materializer);
-                        this.sessions.put(msg.sessionId, sourceQueue);
-                        publishToSessions(new ChatMessage(msg.timestamp, "chatroomadmin", "fakechatroom", String.format("[%s] has joined chatroom", msg.userId)));
-                    })
-                    .match(ChatRoomEntityProtocol.LeaveChat.class, msg -> {
-                        log.info("terminating chat session: {}", msg.sessionId);
-                        removeSession(msg.sessionId);
-                        publishToSessions(new ChatMessage(msg.timestamp, "chatroomadmin", "fakechatroom", String.format("[%s] has left chatroom", msg.userId)));
-                    })
-                    .match(ChatMessage.class, msg -> {
-                        log.info("fake chat room received: " + msg);
-                        publishToSessions(new ChatMessage(msg.getTimestamp(), msg.getUserId(), "fakechatroom", msg.getMessage()));
-                    })
-                    .match(KillSession.class, msg -> getContext().stop(getSelf()))
-                    .matchAny(msg -> log.info("received unknown message: ", msg))
-                    .build();
-        }
-
-        /** remove session */
-        protected void removeSession(String sessionId) {
-            if (this.sessions.containsKey(sessionId)) {
-                SourceQueueWithComplete<ChatMessage> queue = this.sessions.get(sessionId);
-                queue.complete();
-                this.sessions.remove(sessionId);
-            }
-        }
-
-        /** publish message to listeners */
-        protected void publishToSessions(ChatMessage message) {
-            this.sessions.values().stream()
-                .forEach(sourceQueue -> sourceQueue.offer(message));
-        }
-    }
+//    private static class FakeChatRoom extends AbstractActor {
+//        private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
+//
+//        private static final class KillSession {}
+//
+//        private ActorMaterializer materializer;
+//        private HashMap<String, SourceQueueWithComplete<ChatMessage>> sessions = new HashMap<>();
+//
+//        /** constructor */
+//        public FakeChatRoom() {
+//            this.materializer = ActorMaterializer.create(getContext());
+//        }
+//
+//        /** cleanup */
+//        @Override
+//        public void postStop() {
+//            new ArrayList<>(this.sessions.keySet()).stream().forEach(this::removeSession);
+//        }
+//
+//        /** message handler */
+//        @Override
+//        public Receive createReceive() {
+//            return receiveBuilder()
+//                    .match(ChatRoomEntityProtocol.JoinChat.class, msg -> {
+//                        log.info("creating source queue for session({})", msg.sessionId);
+//                        SourceQueueWithComplete<ChatMessage> sourceQueue = Source.<ChatMessage>queue(100, OverflowStrategy.backpressure())
+//                            .to(msg.sessionListener.getSink())
+//                            .run(this.materializer);
+//                        this.sessions.put(msg.sessionId, sourceQueue);
+//                        publishToSessions(new ChatMessage(msg.timestamp, "chatroomadmin", "fakechatroom", String.format("[%s] has joined chatroom", msg.userId)));
+//                    })
+//                    .match(ChatRoomEntityProtocol.LeaveChat.class, msg -> {
+//                        log.info("terminating chat session: {}", msg.sessionId);
+//                        removeSession(msg.sessionId);
+//                        publishToSessions(new ChatMessage(msg.timestamp, "chatroomadmin", "fakechatroom", String.format("[%s] has left chatroom", msg.userId)));
+//                    })
+//                    .match(ChatMessage.class, msg -> {
+//                        log.info("fake chat room received: " + msg);
+//                        publishToSessions(new ChatMessage(msg.getTimestamp(), msg.getUserId(), "fakechatroom", msg.getMessage()));
+//                    })
+//                    .match(KillSession.class, msg -> getContext().stop(getSelf()))
+//                    .matchAny(msg -> log.info("received unknown message: ", msg))
+//                    .build();
+//        }
+//
+//        /** remove session */
+//        protected void removeSession(String sessionId) {
+//            if (this.sessions.containsKey(sessionId)) {
+//                SourceQueueWithComplete<ChatMessage> queue = this.sessions.get(sessionId);
+//                queue.complete();
+//                this.sessions.remove(sessionId);
+//            }
+//        }
+//
+//        /** publish message to listeners */
+//        protected void publishToSessions(ChatMessage message) {
+//            this.sessions.values().stream()
+//                .forEach(sourceQueue -> sourceQueue.offer(message));
+//        }
+//    }
 
     /** get connection uri */
     private URI getConnectionURI(WebSocketSession session) {
@@ -164,17 +156,21 @@ public class ChatSessionHandler implements WebSocketHandler {
 
             pair.first()
                 // create chat session for this connection
-                .thenApply(sinkRef -> {
-                    ActorRef chatSession = this.akkaComponents.getSystem().actorOf(ChatSession.createProps(sinkRef), "chat-session-" + sessionId);
+                .thenCompose(sinkRef -> {
+                    ActorRef chatRoomRegion = this.akkaComponents.getChatRoomRegion();
                     ChatRoomEntityProtocol.ChatRoomCommand command = uriParser.queryParamExists("rejoin") ?
-                        new ChatRoomEntityProtocol.RejoinChat(System.currentTimeMillis(), userId, sessionId, uriParser.getFirstQueryParamValue(LAST_EVENT_ID_PARAM_KEY), sinkRef) :
+                        new ChatRoomEntityProtocol.RejoinChat(System.currentTimeMillis(), userId, chatRoom, uriParser.getFirstQueryParamValue(LAST_EVENT_ID_PARAM_KEY), sinkRef) :
                         new ChatRoomEntityProtocol.JoinChat(System.currentTimeMillis(), userId, sessionId, sinkRef);
-                    chatSession.tell(command, ActorRef.noSender());
 
-                    return chatSession;
+                    return ask(chatRoomRegion, command, REQUEST_TIMEOUT);
                 })
-                // handle incoming messages
-                .thenAccept(chatSession -> {
+                .thenApply(response -> {
+                    if (response instanceof ChatRoomEntityProtocol.Committed) {
+
+                    } else {
+                        throw new RuntimeException("received unexpected response from chatroom: " + response);
+                    }
+                    // handle incoming messages
                     session.receive()
                         // deserialize incoming payload
                         .flatMap(inMsg -> {
