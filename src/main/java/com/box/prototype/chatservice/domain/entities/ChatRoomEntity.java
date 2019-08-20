@@ -11,7 +11,7 @@ import java.util.Collections;
 import static com.box.prototype.chatservice.domain.entities.ChatRoomEntityProtocol.*;
 
 public class ChatRoomEntity extends AbstractPersistentActor {
-    private ChatRoomEntityState state = new ChatRoomEntityState();
+    private ChatRoomEntityState state = new ChatRoomEntityState(getSelf().path().name());
 
     @Override
     public String persistenceId() {

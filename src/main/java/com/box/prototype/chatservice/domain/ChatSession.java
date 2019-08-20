@@ -10,15 +10,18 @@ import akka.stream.OverflowStrategy;
 import akka.stream.SinkRef;
 import akka.stream.javadsl.Source;
 import akka.stream.javadsl.SourceQueueWithComplete;
+import com.box.prototype.chatservice.domain.entities.ChatRoomEntityProtocol;
 import com.box.prototype.chatservice.domain.models.ChatMessage;
 
 import java.util.Optional;
 
 import static com.box.prototype.chatservice.domain.ChatSessionProtocol.*;
 
+import static com.box.prototype.chatservice.domain.entities.ChatRoomEntityProtocol.*;
+
 public class ChatSession extends AbstractActor {
-    public static Props createProps() {
-        return Props.create(ChatSession.class);
+    public static Props createProps(SinkRef<ChatMessage> chatSinkRef) {
+        return Props.create(ChatSession.class, chatSinkRef);
     }
 
     private final LoggingAdapter logger = Logging.getLogger(getContext().getSystem(), this);
@@ -35,7 +38,12 @@ public class ChatSession extends AbstractActor {
     /** message handler */
     @Override
     public Receive createReceive() {
+        // TODO: think through fail and reconnect
         return receiveBuilder()
+            .match(JoinChat.class, m -> System.out.println())
+            .match(RejoinChat.class, m -> System.out.println())
+            .match(AddMessage.class, m -> System.out.println())
+            .match(LeaveChat.class, m -> System.out.println())
             .matchAny(msg -> logger.info("received unknown message: ", msg))
             .build();
     }

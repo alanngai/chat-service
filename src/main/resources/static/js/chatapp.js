@@ -25,7 +25,7 @@ function connect() {
     } else if (chatRoom === '') {
         alert('chatroom cannot be empty or contain spaces or slashes');
     } else {
-        ws = new WebSocket(urlRoot + "/chatrooms/" + chatRoom + "/chatsessions/" + name);
+        ws = new WebSocket(urlRoot + "/chatrooms/" + chatRoom + "/chatsessions/" + name + "?foo=bar&baz=blah");
         ws.onopen = function() {
             setConnected(true);
             log('Info: connection established');
