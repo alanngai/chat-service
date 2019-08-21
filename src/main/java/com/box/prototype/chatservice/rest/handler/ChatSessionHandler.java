@@ -82,7 +82,8 @@ public class ChatSessionHandler implements WebSocketHandler {
 
     /** join chat helper */
     protected CompletionStage<Boolean> joinChat(SessionInfo sessionInfo, SinkRef<ChatMessageEnvelope> outboundSink) {
-        ChatRoomEntityProtocol.ChatRoomCommand command =
+        ChatRoomEntityProtocol.ChatRoomCommand command = sessionInfo.isRejoin() ?
+            new ChatRoomEntityProtocol.RejoinChat(System.currentTimeMillis(), sessionInfo, outboundSink) :
             new ChatRoomEntityProtocol.JoinChat(System.currentTimeMillis(), sessionInfo, outboundSink);
 
         return ask(this.akkaComponents.getChatRoomRegion(), command, REQUEST_TIMEOUT)

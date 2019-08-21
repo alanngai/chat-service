@@ -1,11 +1,10 @@
 var ws = null;
 var urlRoot = "ws://localhost:9091/chatapp";
-var chatState = {}
+var chatState = {};
 
-function chatMessage(name, room, message) {
+function chatMessage(name, message) {
     return {
         'userId': name,
-        'room': room,
         'message': message,
         'timestamp': (new Date()).getTime()
     };
@@ -31,15 +30,16 @@ function connect() {
         if (chatState.lastEventId) {
             endpoint += "&rejoin&lasteventid=" + chatState.lastEventId;
         }
-        ws = new WebSocket(urlRoot + "/chatrooms/" + chatRoom + "?userid=" + name);
+        ws = new WebSocket(endpoint);
         ws.onopen = function() {
             setConnected(true);
             log('Info: connection established');
         }
 
         ws.onmessage = function(event) {
-            chatState.lastEventId = event.lastEventId;
-            log(event.data);
+            var chatEnvelope = JSON.parse(event.data);
+            chatState.lastEventId = chatEnvelope.lastEventId;
+            log(chatEnvelope);
         }
 
         ws.onclose = function(event) {
@@ -70,6 +70,6 @@ function sendMessage() {
 function log(message) {
     var console = document.getElementById('logging');
     var p = document.createElement('p');
-    p.appendChild(document.createTextNode(message));
+    p.appendChild(document.createTextNode(JSON.stringify(message)));
     console.appendChild(p);
 }

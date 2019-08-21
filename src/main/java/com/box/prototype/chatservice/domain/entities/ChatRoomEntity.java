@@ -114,6 +114,8 @@ public class ChatRoomEntity extends AbstractPersistentActor {
     }
 
     protected void handleMemberJoined(JoinChat command, MemberJoined event) {
+        this.state.update(event);
+
         // update session state
         SourceQueueWithComplete<ChatMessageEnvelope> sourceQueue = createSourceQueue(command.sessionListener);
         this.clientSessions.put(command.sessionInfo.getSessionId(), sourceQueue);
@@ -140,6 +142,8 @@ public class ChatRoomEntity extends AbstractPersistentActor {
     }
 
     protected void handleMemberLeft(LeaveChat command, MemberLeft event) {
+        this.state.update(event);
+
         // update session state
         SourceQueueWithComplete<ChatMessageEnvelope> sourceQueue = this.clientSessions.remove(command.sessionInfo.getSessionId());
         if (sourceQueue != null) {
@@ -151,6 +155,8 @@ public class ChatRoomEntity extends AbstractPersistentActor {
     }
 
     protected void handleMessageAdded(AddMessage command, MessageAdded event) {
+        this.state.update(event);
+
         publishMessageToAll(new ChatMessageEnvelope(event.message, eventId(event.message)));
         getSender().tell(new Committed(), getSelf());
     }
