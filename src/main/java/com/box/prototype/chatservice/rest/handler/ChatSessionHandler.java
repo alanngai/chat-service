@@ -45,6 +45,7 @@ public class ChatSessionHandler implements WebSocketHandler {
     @Override
     public Mono<Void> handle(WebSocketSession session) {
         SessionInfo sessionInfo = new SessionInfo(session);
+        logger.info("establishing new chat session: " + sessionInfo);
         if (sessionInfo.getChatRoom() == null || sessionInfo.getUserId() == null) {
             logger.error("terminating due missing chatroom ({}) or userid ({})", sessionInfo.getChatRoom(), sessionInfo.getUserId());
             session.close();

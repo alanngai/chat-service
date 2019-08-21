@@ -1,5 +1,6 @@
 var ws = null;
 var urlRoot = "ws://localhost:9091/chatapp";
+var chatState = {}
 
 function chatMessage(name, room, message) {
     return {
@@ -26,6 +27,10 @@ function connect() {
         alert('chatroom cannot be empty or contain spaces or slashes');
     } else {
         // ws = new WebSocket(urlRoot + "/chatrooms/" + chatRoom + "/chatsessions/" + name + "?foo=bar&baz=blah");
+        var endpoint = urlRoot + "/chatrooms/" + chatRoom + "?userid=" + name;
+        if (chatState.lastEventId) {
+            endpoint += "&rejoin&lasteventid=" + chatState.lastEventId;
+        }
         ws = new WebSocket(urlRoot + "/chatrooms/" + chatRoom + "?userid=" + name);
         ws.onopen = function() {
             setConnected(true);
@@ -33,6 +38,7 @@ function connect() {
         }
 
         ws.onmessage = function(event) {
+            chatState.lastEventId = event.lastEventId;
             log(event.data);
         }
 
