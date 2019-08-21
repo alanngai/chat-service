@@ -20,7 +20,7 @@ public class SessionInfo implements Serializable {
         URIParser uriParser = new URIParser(session.getHandshakeInfo().getUri(), CHAT_SESSION_ROUTE);
         this.sessionId = session.getId();
         this.userId = uriParser.getFirstQueryParamValue(USER_ID_PARAM_KEY);
-        this.chatRoom = uriParser.getFirstQueryParamValue(ROOM_ID_PARAM_KEY);
+        this.chatRoom = uriParser.getPathParamValue(ROOM_ID_PARAM_KEY);
         this.lastEventId = uriParser.getFirstQueryParamValue(LAST_EVENT_ID_PARAM_KEY);
         this.isRejoin = uriParser.queryParamExists(REJOIN_PARAM_KEY);
     }

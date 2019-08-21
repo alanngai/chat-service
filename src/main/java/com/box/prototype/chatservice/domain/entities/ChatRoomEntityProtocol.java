@@ -1,14 +1,18 @@
 package com.box.prototype.chatservice.domain.entities;
 
 import akka.cluster.sharding.ShardRegion;
+import akka.japi.Pair;
 import akka.stream.SinkRef;
 import com.box.prototype.chatservice.domain.models.ChatMessage;
+import com.box.prototype.chatservice.domain.models.ChatMessageEnvelope;
 import com.box.prototype.chatservice.domain.models.SessionInfo;
 import com.typesafe.config.Config;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.TreeMap;
 
 public class ChatRoomEntityProtocol {
     // commands
@@ -21,9 +25,9 @@ public class ChatRoomEntityProtocol {
     }
     public static class JoinChat extends ChatRoomCommand implements Serializable{
         public final long timestamp;
-        public SinkRef<ChatMessage> sessionListener;
+        public SinkRef<ChatMessageEnvelope> sessionListener;
 
-        public JoinChat(long timestamp, SessionInfo sessionInfo, SinkRef<ChatMessage> sessionListener) {
+        public JoinChat(long timestamp, SessionInfo sessionInfo, SinkRef<ChatMessageEnvelope> sessionListener) {
             super(sessionInfo);
             this.timestamp = timestamp;
             this.sessionListener = sessionListener;
@@ -32,9 +36,9 @@ public class ChatRoomEntityProtocol {
     }
     public static class RejoinChat extends  ChatRoomCommand implements Serializable {
         public final long timestamp;
-        public SinkRef<ChatMessage> sessionListener;
+        public SinkRef<ChatMessageEnvelope> sessionListener;
 
-        public RejoinChat(long timestamp, SessionInfo sessionInfo, SinkRef<ChatMessage> sessionListener) {
+        public RejoinChat(long timestamp, SessionInfo sessionInfo, SinkRef<ChatMessageEnvelope> sessionListener) {
             super(sessionInfo);
             this.timestamp = timestamp;
             this.sessionListener = sessionListener;
@@ -59,6 +63,13 @@ public class ChatRoomEntityProtocol {
         }
         public String getChatRoom() { return this.sessionInfo.getChatRoom(); }
     }
+    public static class StopSession {
+        public final String sessionId;
+
+        public StopSession(String sessionId) {
+            this.sessionId = sessionId;
+        }
+    }
 
     // command responses
     public static class Committed implements Serializable {}
@@ -73,37 +84,32 @@ public class ChatRoomEntityProtocol {
     }
 
     // events
-    public interface ChatRoomEvent {}
-    public static class MemberJoined implements Serializable, ChatRoomEvent {
-        public final long timestamp;
-        public final String userId;
-
-        public MemberJoined(long timestamp, String userId) {
-            this.timestamp = timestamp;
-            this.userId = userId;
-        }
-    }
-    public static class MemberLeft implements Serializable, ChatRoomEvent {
-        public final long timestamp;
-        public final String userId;
-
-        public MemberLeft(long timestamp, String userId) {
-            this.timestamp = timestamp;
-            this.userId = userId;
-        }
-    }
-    public static class MessageAdded implements Serializable, ChatRoomEvent {
+    public static class ChatRoomEvent {
         public final ChatMessage message;
-
-        public MessageAdded(ChatMessage message) {
+        protected ChatRoomEvent(ChatMessage message) {
             this.message = message;
         }
+    }
+    public static class MemberJoined extends ChatRoomEvent implements Serializable {
+        public MemberJoined(ChatMessage message) { super(message); }
+    }
+    public static class MemberLeft extends ChatRoomEvent implements Serializable {
+        public MemberLeft(ChatMessage message) { super(message); }
+    }
+    public static class MessageAdded extends ChatRoomEvent implements Serializable {
+        public MessageAdded(ChatMessage message) { super(message); }
     }
 
     // state
     protected static class ChatRoomEntityState implements Serializable {
         public final HashSet<String> members = new HashSet<>();
-        public final ArrayList<ChatMessage> chatLog = new ArrayList<>();
+        public final TreeMap<Pair<Long, String>, ChatMessage> chatLog = new TreeMap<>(new Comparator<Pair<Long, String>>() {
+            @Override
+            public int compare(Pair<Long, String> left, Pair<Long, String> right) {
+                int tsCompare = Long.compare(left.first(), right.first());
+                return tsCompare != 0 ? tsCompare : left.second().compareTo(right.second());
+            }
+        });
         public String chatRoom = "";
         public ChatRoomEntityState() {
         }
@@ -115,14 +121,15 @@ public class ChatRoomEntityProtocol {
         public void update(ChatRoomEvent event) {
             if (event instanceof MemberJoined) {
                 MemberJoined joined = (MemberJoined)event;
-                this.members.add(joined.userId);
-                this.chatLog.add(new ChatMessage(joined.timestamp, joined.userId, String.format("[%s] joined chat", joined.userId)));
+                this.members.add(joined.message.getUserId());
+                this.chatLog.put(Pair.create(joined.message.getTimestamp(), joined.message.getUserId()), joined.message);
             } else if (event instanceof MemberLeft) {
                 MemberLeft left = (MemberLeft) event;
-                this.members.remove(left.userId);
-                this.chatLog.add(new ChatMessage(left.timestamp, left.userId, String.format("[%s] left chat", left.userId)));
+                this.members.remove(left.message.getUserId());
+                this.chatLog.put(Pair.create(left.message.getTimestamp(), left.message.getUserId()), left.message);
             } else if (event instanceof MessageAdded) {
-                this.chatLog.add(((MessageAdded)event).message);
+                ChatMessage chatMessage = ((MessageAdded)event).message;
+                this.chatLog.put(Pair.create(chatMessage.getTimestamp(), chatMessage.getUserId()), chatMessage);
             } else {
                 throw new RuntimeException("unknown ChatRoom event type: " + event.getClass());
             }

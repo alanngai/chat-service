@@ -26,7 +26,7 @@ public class WebSocketConfig {
     public static final String USER_ID_PARAM_KEY = "userid";
     public static final String LAST_EVENT_ID_PARAM_KEY = "lasteventid";
     public static final String REJOIN_PARAM_KEY = "rejoin";
-    public static final String CHAT_SESSION_ROUTE = String.format("/chatapp/chatrooms/{%s}/chatsessions/{%s}", ROOM_ID_PARAM_KEY, USER_ID_PARAM_KEY);
+    public static final String CHAT_SESSION_ROUTE = String.format("/chatapp/chatrooms/{%s}", ROOM_ID_PARAM_KEY);
 
     @Autowired
     private AkkaComponents akkaComponents;

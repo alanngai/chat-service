@@ -25,7 +25,8 @@ function connect() {
     } else if (chatRoom === '') {
         alert('chatroom cannot be empty or contain spaces or slashes');
     } else {
-        ws = new WebSocket(urlRoot + "/chatrooms/" + chatRoom + "/chatsessions/" + name + "?foo=bar&baz=blah");
+        // ws = new WebSocket(urlRoot + "/chatrooms/" + chatRoom + "/chatsessions/" + name + "?foo=bar&baz=blah");
+        ws = new WebSocket(urlRoot + "/chatrooms/" + chatRoom + "?userid=" + name);
         ws.onopen = function() {
             setConnected(true);
             log('Info: connection established');
@@ -54,7 +55,6 @@ function sendMessage() {
     if (ws != null) {
         var name = document.getElementById('name').value;
         var message = document.getElementById('message').value;
-        log('Sent to server :: ' + message);
         ws.send(JSON.stringify(chatMessage(name, message)));
     } else {
         alert('connection not established, please connect.');

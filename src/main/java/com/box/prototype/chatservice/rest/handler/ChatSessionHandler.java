@@ -7,6 +7,7 @@ import akka.stream.javadsl.*;
 import com.box.prototype.chatservice.akka.AkkaComponents;
 import com.box.prototype.chatservice.domain.entities.ChatRoomEntityProtocol;
 import com.box.prototype.chatservice.domain.models.ChatMessage;
+import com.box.prototype.chatservice.domain.models.ChatMessageEnvelope;
 import com.box.prototype.chatservice.domain.models.SessionInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.reactivestreams.Publisher;
@@ -37,7 +38,6 @@ public class ChatSessionHandler implements WebSocketHandler {
 
     public ChatSessionHandler(AkkaComponents components) {
         this.akkaComponents = components;
-
         REQUEST_TIMEOUT = components.getConfig().getDuration("server.request-timeout");
     }
 
@@ -52,7 +52,7 @@ public class ChatSessionHandler implements WebSocketHandler {
         }
 
         // construct a sinkref to pass to chatroom
-        Pair<CompletionStage<SinkRef<ChatMessage>>, Publisher<WebSocketMessage>> pair = StreamRefs.<ChatMessage>sinkRef()
+        Pair<CompletionStage<SinkRef<ChatMessageEnvelope>>, Publisher<WebSocketMessage>> pair = StreamRefs.<ChatMessageEnvelope>sinkRef()
             .map(msg -> session.textMessage(this.mapper.writeValueAsString(msg)))
             .toMat(Sink.asPublisher(AsPublisher.WITHOUT_FANOUT), Keep.both())
             .run(this.akkaComponents.getMaterializer());
@@ -80,7 +80,7 @@ public class ChatSessionHandler implements WebSocketHandler {
     }
 
     /** join chat helper */
-    protected CompletionStage<Boolean> joinChat(SessionInfo sessionInfo, SinkRef<ChatMessage> outboundSink) {
+    protected CompletionStage<Boolean> joinChat(SessionInfo sessionInfo, SinkRef<ChatMessageEnvelope> outboundSink) {
         ChatRoomEntityProtocol.ChatRoomCommand command =
             new ChatRoomEntityProtocol.JoinChat(System.currentTimeMillis(), sessionInfo, outboundSink);
 
