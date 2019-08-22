@@ -3,11 +3,14 @@ package com.box.prototype.chatservice;
 import com.box.prototype.chatservice.akka.AkkaComponents;
 import com.box.prototype.chatservice.rest.handler.ChatSessionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.Ordered;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping;
@@ -50,5 +53,6 @@ public class WebSocketConfig {
     @Bean
     public WebSocketService webSocketService() {
         return new HandshakeWebSocketService(new ReactorNettyRequestUpgradeStrategy());
+
     }
 }

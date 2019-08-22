@@ -154,6 +154,11 @@
             <artifactId>akka-persistence_${scala.bin.version}</artifactId>
             <version>${akka.version}</version>
         </dependency>
+		<dependency>
+			<groupId>org.fusesource.leveldbjni</groupId>
+			<artifactId>leveldbjni-all</artifactId>
+			<version>1.8</version>
+		</dependency>
         <dependency>
             <groupId>com.lightbend.akka.management</groupId>
             <artifactId>akka-management-cluster-bootstrap_${scala.bin.version}</artifactId>

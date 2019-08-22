@@ -6,6 +6,14 @@
 <body>
 	<div>
 		<div id="connect-container" class="ui centered grid">
+			<div class="row" style="color:blue;font-size: 30px">Welcome to [[${appName}]], running on [[${hostname}]]:[[${port}]]</div>
+			<div class="row">
+				<span>Websocket Port</span>
+				<span>
+					<input type="text" id="port" style="width: 100px" class="ui input" th:value="${port}"></input>
+				</span>
+			</div>
+
 			<div class="row">
 				<span>Name</span>
 				<span>
@@ -26,7 +34,7 @@
 				<textarea id="message" style="width: 350px" class="ui input" placeholder="Message to Echo"></textarea>
 			</div>
 			<div class="row">
-				<button id="chatsession" onclick="sendMessage();" disabled="disabled" class="ui button">Send</button>
+				<button id="send" onclick="sendMessage();" disabled="disabled" class="ui button">Send</button>
 			</div>
 		</div>
 		<div id="console-container">

@@ -3,9 +3,11 @@ package com.box.prototype.chatservice.domain.models;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.io.Serializable;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ChatMessageEnvelope {
+public class ChatMessageEnvelope implements Serializable {
     private ChatMessage message;
     private String lastEventId;
 

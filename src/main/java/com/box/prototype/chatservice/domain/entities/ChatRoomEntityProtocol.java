@@ -16,14 +16,14 @@ import java.util.TreeMap;
 
 public class ChatRoomEntityProtocol {
     // commands
-    public static class ChatRoomCommand {
+    public static class ChatRoomCommand implements Serializable {
         public final SessionInfo sessionInfo;
 
         protected ChatRoomCommand(SessionInfo sessionInfo) {
             this.sessionInfo = sessionInfo;
         }
     }
-    public static class JoinChat extends ChatRoomCommand implements Serializable{
+    public static final class JoinChat extends ChatRoomCommand {
         public final long timestamp;
         public SinkRef<ChatMessageEnvelope> sessionListener;
 
@@ -34,7 +34,7 @@ public class ChatRoomEntityProtocol {
         }
         public String getChatRoom() { return this.sessionInfo.getChatRoom(); }
     }
-    public static class RejoinChat extends  ChatRoomCommand implements Serializable {
+    public static class RejoinChat extends  ChatRoomCommand {
         public final long timestamp;
         public SinkRef<ChatMessageEnvelope> sessionListener;
 
@@ -45,7 +45,7 @@ public class ChatRoomEntityProtocol {
         }
         public String getChatRoom() { return this.sessionInfo.getChatRoom(); }
     }
-    public static class LeaveChat extends ChatRoomCommand implements Serializable{
+    public static class LeaveChat extends ChatRoomCommand {
         public final long timestamp;
 
         public LeaveChat(long timestamp, SessionInfo sessionInfo) {
@@ -54,7 +54,7 @@ public class ChatRoomEntityProtocol {
         }
         public String getChatRoom() { return this.sessionInfo.getChatRoom(); }
     }
-    public static class AddMessage extends ChatRoomCommand implements Serializable {
+    public static class AddMessage extends ChatRoomCommand {
         public final ChatMessage message;
 
         public AddMessage(ChatMessage message, SessionInfo sessionInfo) {
@@ -63,6 +63,8 @@ public class ChatRoomEntityProtocol {
         }
         public String getChatRoom() { return this.sessionInfo.getChatRoom(); }
     }
+
+    // internal commands
     public static class StopSession {
         public final String sessionId;
 
@@ -84,19 +86,19 @@ public class ChatRoomEntityProtocol {
     }
 
     // events
-    public static class ChatRoomEvent {
+    public static class ChatRoomEvent implements Serializable{
         public final ChatMessage message;
         protected ChatRoomEvent(ChatMessage message) {
             this.message = message;
         }
     }
-    public static class MemberJoined extends ChatRoomEvent implements Serializable {
+    public static class MemberJoined extends ChatRoomEvent {
         public MemberJoined(ChatMessage message) { super(message); }
     }
-    public static class MemberLeft extends ChatRoomEvent implements Serializable {
+    public static class MemberLeft extends ChatRoomEvent {
         public MemberLeft(ChatMessage message) { super(message); }
     }
-    public static class MessageAdded extends ChatRoomEvent implements Serializable {
+    public static class MessageAdded extends ChatRoomEvent {
         public MessageAdded(ChatMessage message) { super(message); }
     }
 
