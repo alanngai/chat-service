@@ -8,33 +8,56 @@
 		<div id="connect-container" class="ui centered grid">
 			<div class="row" style="color:blue;font-size: 30px">Welcome to [[${appName}]], running on [[${hostname}]]:[[${port}]]</div>
 			<div class="row">
-				<span>Websocket Port</span>
-				<span>
-					<input type="text" id="port" style="width: 100px" class="ui input" th:value="${port}"></input>
-				</span>
+				<table>
+					<tr>
+						<td>
+							<div>
+								<span>Websocket Port</span>
+								<span>
+								<input type="text" id="port" style="width: 100px" class="ui input" th:value="${port}"></input>
+							</span>
+							</div>
+						</td>
+						<td>
+							<div class="row">
+								<span>Name</span>
+								<span>
+									<input type="text" id="name" style="width: 100px" class="ui input" placeholder="Name"></input>
+								</span>
+							</div>
+						</td>
+						<td>
+							<div class="row">
+								<span>Chat Room</span>
+								<span>
+									<input type="text" id="chatroom" style="width: 100px" class="ui input" placeholder="Chat Room" value="mychat"></input>
+								</span>
+							</div>
+						</td>
+					</tr>
+				</table>
 			</div>
-
 			<div class="row">
-				<span>Name</span>
-				<span>
-					<input type="text" id="name" style="width: 100px" class="ui input" placeholder="Name"></input>
-				</span>
-			</div>
-			<div class="row">
-				<span>Chat Room</span>
-				<span>
-					<input type="text" id="chatroom" style="width: 100px" class="ui input" placeholder="Chat Room" value="mychat"></input>
-				</span>
-			</div>
-			<div class="row">
-				<button id="connect" onclick="connect();" class="ui green button">Connect</button>
-				<button id="disconnect" disabled="disabled" onclick="disconnect();" class="ui red button">Disconnect</button>
-			</div>
-			<div class="row">
-				<textarea id="message" style="width: 350px" class="ui input" placeholder="Message to Echo"></textarea>
-			</div>
-			<div class="row">
-				<button id="send" onclick="sendMessage();" disabled="disabled" class="ui button">Send</button>
+				<table>
+					<tr>
+						<td>
+							<div class="row">
+								<button id="connect" onclick="connect();" class="ui green button">Connect</button>
+								<button id="disconnect" disabled="disabled" onclick="disconnect();" class="ui red button">Disconnect</button>
+							</div>
+						</td>
+						<td>
+							<div class="row">
+								<textarea id="message" style="width: 350px" class="ui input" placeholder="Message to Echo"></textarea>
+							</div>
+						</td>
+						<td>
+							<div class="row">
+								<button id="send" onclick="sendMessage();" disabled="disabled" class="ui button">Send</button>
+							</div>
+						</td>
+					</tr>
+				</table>
 			</div>
 		</div>
 		<div id="console-container">
