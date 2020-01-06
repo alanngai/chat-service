@@ -142,21 +142,25 @@ public class ChatRoomEntity extends AbstractPersistentActor {
     }
 
     protected void handleMemberLeft(LeaveChat command, MemberLeft event) {
+        // update session state
         this.state.update(event);
 
-        // update session state
+        // signal to close session stream
         SourceQueueWithComplete<ChatMessageEnvelope> sourceQueue = this.clientSessions.remove(command.sessionInfo.getSessionId());
         if (sourceQueue != null) {
             sourceQueue.complete();
         }
 
+        // let other chatroom members know of departing user
         publishMessageToAll(new ChatMessageEnvelope(event.message, eventId(event.message)));
         getSender().tell(new Committed(), getSelf());
     }
 
     protected void handleMessageAdded(AddMessage command, MessageAdded event) {
+        // update session state
         this.state.update(event);
 
+        // publish message to all chatroom members
         publishMessageToAll(new ChatMessageEnvelope(event.message, eventId(event.message)));
         getSender().tell(new Committed(), getSelf());
     }
